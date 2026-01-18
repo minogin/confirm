@@ -20,6 +20,4 @@ data class EqualsMatcher<T>(
 data class ValueMismatch<T>(
     override val actual: T,
     val expected: T,
-) : Mismatch<T>(actual) {
-    override fun toString(): String = "Expected value <$expected>, but got <$actual>"
-}
+) : Mismatch<T>(actual)

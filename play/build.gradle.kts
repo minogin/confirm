@@ -1,25 +1,23 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
-//    id("com.minogin.deep.gradle-plugin") version "1.0.0-2"
+    application
+    id("com.minogin.confirm")
 }
 
 kotlin {
     jvmToolchain(libs.versions.java.get().toInt())
+}
 
-    compilerOptions {
-        // Dumps IR after your specific transformer has finished
-        freeCompilerArgs.add("-Xdump-directory=${layout.buildDirectory.get()}/ir-dumps")
-        freeCompilerArgs.add("-Xdump-ir-after=com.minogin.deep.MyIrTransformer")
-    }
+application {
+    mainClass.set("com.minogin.confirm.test.MainKt")
 }
 
 repositories {
     mavenCentral()
-    mavenLocal()
 }
 
 dependencies {
-    compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.0")
+    implementation(libs.confirm.api)
 }
 
 testing {
