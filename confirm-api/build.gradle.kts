@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.*
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
 }
@@ -9,9 +11,19 @@ kotlin {
     jvmToolchain(libs.versions.java.get().toInt())
 }
 
+tasks.withType<KotlinCompile> {
+    compilerOptions {
+        freeCompilerArgs.set(listOf("-Xcontext-parameters"))
+    }
+}
+
 repositories {
     mavenCentral()
     mavenLocal()
+}
+
+dependencies {
+    implementation(libs.kotlin.reflect)
 }
 
 testing {

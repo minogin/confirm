@@ -1,104 +1,164 @@
 package com.minogin.confirm
 
+import org.jetbrains.kotlin.backend.common.*
 import org.jetbrains.kotlin.backend.common.extensions.*
+import org.jetbrains.kotlin.backend.common.lower.*
+import org.jetbrains.kotlin.backend.jvm.ir.*
+import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.expressions.*
-import org.jetbrains.kotlin.ir.expressions.impl.*
-import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.*
-import org.jetbrains.kotlin.name.*
 
 class ConfirmIrTransformer(
     private val context: IrPluginContext
 ) : IrElementTransformerVoid() {
     companion object {
+        const val ApiPackage = "com.minogin.confirm.api"
+        const val ImplPackage = "com.minogin.confirm.impl"
+
+        const val DeepMatches = "$ImplPackage.ConfirmationImpl.deepMatches"
+        const val both = "$ApiPackage.both"
+        const val either = "$ApiPackage.either"
+        const val lessThan = "$ApiPackage.lessThan"
+
         const val MatcherPackage = "com.minogin.confirm.matcher"
+        const val Matcher = "Matcher"
+
+        const val BuiltinMatcherPackage = "com.minogin.confirm.matcher.builtin"
+        const val ObjectMatcher = "ObjectMatcher"
+        const val LogicalMatcher = "LogicalMatcher"
+        const val LogicalOperator = "LogicalOperator"
+        const val ComparableMatcher = "ComparableMatcher"
+        const val ComparisonOperator = "ComparisonOperator"
     }
 
-    override fun visitCall(expression: IrCall): IrExpression {
-        val fqName = expression.symbol.owner.kotlinFqName.asString()
-        if (fqName == "com.minogin.confirm.api.Confirmation.deepMatches") {
-            val expectedLambda = expression.arguments[1] as? IrFunctionExpression
-            if (expectedLambda != null) {
-                val function = expectedLambda.function
-
-                function.transformChildren(object : IrElementTransformerVoid() {
-                    override fun visitConst(expression: IrConst): IrExpression = transformConst(expression)
-                }, null)
-
-                function.returnType = equalsMatcherClassSymbol().defaultType
-                val receiverType = function.parameters[0].type
-                expectedLambda.type = context.irBuiltIns.functionN(1).typeWith(receiverType, function.returnType)
-            }
-
-            return expression
+    override fun visitCall(expression: IrCall): IrExpression =
+        when (expression.fqName()) {
+            DeepMatches -> transformDeepMatchesLambda(expression)
+            else -> super.visitCall(expression)
         }
 
-        return super.visitCall(expression)
-    }
+    private fun transformDeepMatchesLambda(expression: IrCall): IrExpression {
+        val lambda = expression.arguments[1] as IrFunctionExpression
+        val lambdaFunction = lambda.function
 
-    private fun equalsMatcherClassSymbol(): IrClassSymbol {
-        val classId = ClassId(FqName(MatcherPackage), Name.identifier("EqualsMatcher"))
-        return context.referenceClass(classId) ?: error("Could not find EqualsMatcher")
-    }
+        lambdaFunction.transform(Transformer(), null)
 
-    private fun transformConst(expression: IrConst): IrExpression {
-        val constructorSymbol = equalsMatcherClassSymbol().owner.constructors.first().symbol
+        lambdaFunction.returnType = context.kClass(MatcherPackage, Matcher).defaultType
 
-        return IrConstructorCallImpl.fromSymbolOwner(
-            startOffset = expression.startOffset,
-            endOffset = expression.endOffset,
-            type = constructorSymbol.owner.returnType,
-            constructorSymbol = constructorSymbol
-        ).apply {
-            arguments[0] = expression
-        }
-    }
-
-    private fun transformInternalCall(expression: IrCall): IrExpression {
-//        if (expression.type.isIterable())
+        lambda.type = context.irBuiltIns.functionN(0).typeWith(lambdaFunction.returnType)
 
         return expression
     }
 
-//    override fun visitCall(declaration: IrFunction): IrStatement {
-//        val body = declaration.body as? IrBlockBody ?: return super.visitFunction(declaration)
-//
-//        val myAnalyticsClassSymbol = context.referenceClass(
-//            ClassId(FqName("com.minogin.deep"), Name.identifier("MyAnalytics"))
-//        ) ?: return super.visitFunction(declaration)
-//
-//        val listenerFuncSymbol = context.referenceFunctions(
-//            CallableId(
-//                FqName("com.minogin.deep"),
-//                FqName("MyAnalytics"),
-//                Name.identifier("onFunctionStart")
-//            )
-//        ).firstOrNull() ?: return super.visitFunction(declaration)
-//
-//        // 3. Use a Builder to create the new IR code
-//        declaration.body = DeclarationIrBuilder(context, declaration.symbol).irBlockBody {
-//            // Create the call: MyAnalytics.onFunctionStart("functionName")
-//            val call = irCall(listenerFuncSymbol).apply {
-//                arguments[0] = irGetObject(myAnalyticsClassSymbol)
-//                arguments[1] = irString(declaration.name.asString())
-//            }
-//
-//            // Add the listener call to the TOP of the function
-//            +call
-//
-//            // Add all original statements back after our call
-//            for (statement in body.statements) {
-//                +statement
-//            }
-//        }
-//
-//        return super.visitFunction(declaration)
-//    }
-//
-//    override fun visitExpression(expression: IrExpression): IrExpression {
-//        // Logic to transform specific expressions goes here
-//        return super.visitExpression(expression)
-//    }
+    private inner class Transformer : IrElementTransformerVoidWithContext() {
+        private fun builder(transformed: IrExpression): DeclarationIrBuilder? {
+            val scopeSymbol = allScopes.lastOrNull()?.scope?.scopeOwnerSymbol
+                ?: return null
+
+            return DeclarationIrBuilder(
+                generatorContext = context,
+                symbol = scopeSymbol,
+                startOffset = transformed.startOffset,
+                endOffset = transformed.endOffset
+            )
+        }
+
+        override fun visitCall(expression: IrCall): IrExpression {
+            val transformed = super.visitCall(expression) as IrCall
+
+            val builder = builder(transformed) ?: return transformed
+
+            val fqName = transformed.symbol.owner.kotlinFqName.asString()
+
+            if (fqName == both || fqName == either) {
+                val logicalMatcherConstructor =
+                    context.kClass(BuiltinMatcherPackage, LogicalMatcher).constructor()
+                val logicalOperatorClass = context.kClass(BuiltinMatcherPackage, LogicalOperator)
+
+                return builder.irCall(logicalMatcherConstructor).apply {
+                    arguments[0] = transformed.arguments[0]
+                    arguments[1] = transformed.arguments[1]
+                    arguments[2] = builder.irGetEnumValue(
+                        logicalOperatorClass.enumEntry(
+                            when (fqName) {
+                                both -> "And"
+                                either -> "Or"
+                                else -> error("Unexpected fqName: $fqName")
+                            }
+                        )
+                    )
+                }
+            }
+
+            if (fqName == lessThan) {
+                val comparableMatcherConstructor =
+                    context.kClass(BuiltinMatcherPackage, ComparableMatcher).constructor()
+                val comparisonOperatorClass = context.kClass(BuiltinMatcherPackage, ComparisonOperator)
+
+                return builder.irCall(comparableMatcherConstructor).apply {
+                    arguments[0] = transformed.arguments[0]
+                    arguments[1] = builder.irGetEnumValue(
+                        comparisonOperatorClass.enumEntry("LessThan")
+                    )
+                }
+            }
+
+            return transformed
+        }
+
+        override fun visitConstructorCall(expression: IrConstructorCall): IrExpression {
+            val transformed = super.visitConstructorCall(expression) as IrConstructorCall
+
+            val builder = builder(transformed) ?: return transformed
+
+            val targetClass = transformed.symbol.owner.parentAsClass.symbol
+            val classReference = builder.kClassReference(targetClass.defaultType)
+
+            val mapOf = context.functions("kotlin.collections", "mapOf").first { fn ->
+                val parameters = fn.owner.parameters
+                parameters.size == 1 && parameters[0].isVararg
+            }
+            val to = context.functions("kotlin", "to").first()
+
+            val pairs = transformed.symbol.owner.parameters.mapIndexedNotNull { index, param ->
+                val arg = transformed.arguments[index] ?: return@mapIndexedNotNull null
+                val property =
+                    targetClass.owner.properties.find { it.name == param.name }?.symbol ?: return@mapIndexedNotNull null
+
+                val propRef = builder.irPropertyReference(
+                    kClass = targetClass,
+                    property = property
+                )
+
+                builder.irCall(to).apply {
+                    typeArguments[0] = context.irBuiltIns.anyNType
+                    typeArguments[1] = context.irBuiltIns.anyNType
+
+                    arguments[0] = propRef
+                    arguments[1] = arg
+                }
+            }
+
+            val propertiesMap = builder.irCall(mapOf).apply {
+                typeArguments[0] = context.irBuiltIns.anyNType
+                typeArguments[1] = context.irBuiltIns.anyNType
+
+                val pairClass = context.kClass("kotlin", "Pair")
+                arguments[0] = builder.irVararg(
+                    elementType = pairClass.typeWith(context.irBuiltIns.anyNType, context.irBuiltIns.anyNType),
+                    values = pairs
+                )
+            }
+
+            // TODO Only do transformation if there's a nested matcher somewhere
+            val objectMatcherConstructor = context.kClass(BuiltinMatcherPackage, ObjectMatcher).constructor()
+            return builder.irCall(objectMatcherConstructor).apply {
+                arguments[0] = classReference
+                arguments[1] = propertiesMap
+                arguments[2] = builder.irNull()
+            }
+        }
+    }
 }

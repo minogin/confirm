@@ -1,25 +1,21 @@
 package com.minogin.confirm.api
 
-import com.minogin.confirm.matcher.*
+import com.minogin.confirm.impl.*
 
-fun <T> confirmThat(actual: () -> T) = Confirmation(actual)
+fun <T> confirmThat(actual: () -> T) = ConfirmationImpl(actual)
 
-class Confirmation<T>(
-    private val actual: () -> T
-) {
-    infix fun deepMatches(expected: MatcherScope<T>.() -> T) {
-        val actualValue = actual()
-        val matcherScope = MatcherScope<T>()
-        val matcher = matcherScope.expected() as Matcher<Any?>
-        val result = matcher.match(actualValue as Any?)
-        println(result)
-    }
+interface Confirmation<T> {
+    infix fun deepMatches(expected: () -> T)
 }
 
-class MatcherScope<T> {
-    fun eq(value: T): T = apply(EqualsMatcher(value))
+infix fun <T> Any?.either(value: T): T {
+    throw IRImplementationException("either")
+}
 
-    private fun <T> apply(matcher: Matcher<T>): T {
-        throw IllegalStateException("Implemented by IR")
-    }
+infix fun <T> Any?.both(value: T): T {
+    throw IRImplementationException("both")
+}
+
+fun <T : Comparable<T>> lessThan(value: T): T {
+    throw IRImplementationException("lessThan")
 }

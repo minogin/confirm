@@ -1,3 +1,6 @@
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
     application
@@ -6,6 +9,12 @@ plugins {
 
 kotlin {
     jvmToolchain(libs.versions.java.get().toInt())
+}
+
+tasks.withType<KotlinCompile> {
+    compilerOptions {
+        freeCompilerArgs.set(listOf("-Xcontext-parameters"))
+    }
 }
 
 application {
@@ -32,7 +41,6 @@ testing {
         }
     }
 }
-
 
 tasks.test {
     useJUnitPlatform()

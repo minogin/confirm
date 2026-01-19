@@ -1,9 +1,13 @@
 # confirm
 Kotlin Deep Assertion library
 
+## Gradle commands
+
+# Stop all daemons
+
 ./gradlew --stop
 
-./gradlew :play:classes -Dorg.gradle.debug=true --no-daemon --rerun-tasks --no-build-cache
+# Debug build with in-process Kotlin compiler
 
 ./gradlew :play:classes \
 -Dorg.gradle.debug=true \
@@ -11,3 +15,15 @@ Kotlin Deep Assertion library
 --no-daemon \
 --rerun-tasks \
 --no-build-cache
+
+# Build
+
+./gradlew :play:classes \
+-Pkotlin.compiler.execution.strategy=in-process \
+--no-daemon \
+--rerun-tasks \
+--no-build-cache
+
+# Run
+
+./gradlew :play:run

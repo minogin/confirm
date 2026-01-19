@@ -2,19 +2,29 @@ package com.minogin.confirm.matcher
 
 import kotlin.reflect.*
 
-interface MatchResult<T> {
-    val matches: Boolean
-    val actual: T
+sealed interface MatchResult
+
+data object Matches : MatchResult
+
+interface Mismatch : MatchResult {
+    val actual: Any?
+    val expected: Matcher
 }
 
-data class Matches<T>(override val actual: T) : MatchResult<T> {
-    override val matches: Boolean = true
+data class NullMismatch(
+    override val expected: Matcher
+) : Mismatch {
+    override val actual: Any? = null
 }
 
-abstract class Mismatch<T>(override val actual: T) : MatchResult<T> {
-    final override val matches: Boolean = false
-}
+data class TypeMismatch(
+    override val actual: Any?,
+    override val expected: Matcher,
+    val expectedType: KClass<*>
+) : Mismatch
 
-data class NullMismatch<T>(override val actual: T) : Mismatch<T>(actual)
-
-data class TypeMismatch<T>(override val actual: T, val expectedType: KClass<*>) : Mismatch<T>(actual)
+data class ValueMismatch(
+    override val actual: Any?,
+    override val expected: Matcher,
+    val expectedValue: Any?
+) : Mismatch
