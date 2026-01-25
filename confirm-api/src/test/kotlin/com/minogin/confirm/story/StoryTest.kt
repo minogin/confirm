@@ -1,8 +1,7 @@
 package com.minogin.confirm.story
 
-import com.minogin.confirm.api.*
+import com.minogin.confirm.dsl.*
 import org.junit.jupiter.api.*
-import javax.management.Query.lt
 
 class StoryTest {
     @Test

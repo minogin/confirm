@@ -1,6 +1,6 @@
 package com.minogin.confirm.test
 
-import com.minogin.confirm.api.*
+import com.minogin.confirm.dsl.*
 
 class I(
     val x: Int

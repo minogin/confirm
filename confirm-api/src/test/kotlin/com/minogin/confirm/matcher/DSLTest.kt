@@ -1,8 +1,8 @@
 package com.minogin.confirm.matcher
 
-import com.minogin.confirm.api.*
-import com.minogin.confirm.matcher.builtin.ListMatcher
-import com.minogin.confirm.matcher.builtin.ValueMatcher
+import com.minogin.confirm.dsl.*
+import com.minogin.confirm.core.matcher.builtin.ListMatcher
+import com.minogin.confirm.core.matcher.builtin.ValueMatcher
 import org.junit.jupiter.api.*
 
 class DSLTest {

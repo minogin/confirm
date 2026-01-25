@@ -1,6 +1,14 @@
 package com.minogin.confirm.matcher.builtin
 
-import com.minogin.confirm.matcher.*
+import com.minogin.confirm.core.api.Match
+import com.minogin.confirm.core.matcher.MatcherRegistry
+import com.minogin.confirm.core.matcher.builtin.ListMatcher
+import com.minogin.confirm.core.matcher.builtin.ListSizeMismatch
+import com.minogin.confirm.core.matcher.builtin.ListValueMismatch
+import com.minogin.confirm.core.matcher.builtin.NullMismatch
+import com.minogin.confirm.core.matcher.builtin.TypeMismatch
+import com.minogin.confirm.core.matcher.builtin.ValueMatcher
+import com.minogin.confirm.core.matcher.builtin.ValueMismatch
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -29,13 +37,13 @@ class ListMatcherTest {
                 actual = listOf(1, 20, 3),
                 expected = listMatcher,
                 index = 1,
-                mismatch = ValueMismatch(actual = 20, expected = ValueMatcher(2), expectedValue = 2)
+                mismatch = ValueMismatch(actual = 20, expected = ValueMatcher(2))
             ),
             listMatcher.match(listOf(1, 20, 3))
         )
 
         assertEquals(
-            Matches,
+            Match,
             listMatcher.match(listOf(1, 2, 3))
         )
     }

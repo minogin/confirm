@@ -1,9 +1,12 @@
 package com.minogin.confirm.matcher.builtin
 
-import com.minogin.confirm.matcher.MatcherRegistry
-import com.minogin.confirm.matcher.NullMismatch
-import com.minogin.confirm.matcher.TypeMismatch
-import com.minogin.confirm.matcher.ValueMismatch
+import com.minogin.confirm.core.matcher.MatcherRegistry
+import com.minogin.confirm.core.matcher.builtin.NullMismatch
+import com.minogin.confirm.core.matcher.builtin.ObjectMatcher
+import com.minogin.confirm.core.matcher.builtin.PropertyValueMismatch
+import com.minogin.confirm.core.matcher.builtin.TypeMismatch
+import com.minogin.confirm.core.matcher.builtin.ValueMatcher
+import com.minogin.confirm.core.matcher.builtin.ValueMismatch
 import org.junit.jupiter.api.Test
 import kotlin.test.*
 
@@ -46,7 +49,7 @@ class ObjectMatcherTest {
                 actual = actual,
                 expected = objectMatcher,
                 property = A::y,
-                mismatch = ValueMismatch(actual = "def", expected = ValueMatcher("abc"), expectedValue = "abc")
+                mismatch = ValueMismatch(actual = "def", expected = ValueMatcher("abc"))
             ),
             objectMatcher.match(actual)
         )
@@ -64,7 +67,7 @@ class ObjectMatcherTest {
                     actual = actual.b,
                     expected = ObjectMatcher(b),
                     property = B::x,
-                    mismatch = ValueMismatch(actual = 5, expected = ValueMatcher(3), expectedValue = 3)
+                    mismatch = ValueMismatch(actual = 5, expected = ValueMatcher(3))
                 )
             ),
             objectMatcher.match(actual)
