@@ -2,7 +2,7 @@ package com.minogin.confirm.impl
 
 import com.minogin.confirm.api.*
 import com.minogin.confirm.matcher.*
-import com.minogin.confirm.util.*
+import com.minogin.confirm.printer.*
 
 class ConfirmationImpl<T>(
     private val actual: () -> T
@@ -21,7 +21,7 @@ class ConfirmationImpl<T>(
         println("######################################################")
         println()
 
-        println(PrinterImpl().prettyPrint(result))
+        println(PrinterImpl().print(result))
     }
 }
 

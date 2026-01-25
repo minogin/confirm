@@ -21,8 +21,6 @@ data class ListMatcher(
             actual.size != list.size -> ListSizeMismatch(
                 actual = actual,
                 expected = this,
-                actualSize = actual.size,
-                expectedSize = list.size
             )
 
             else -> {
@@ -43,15 +41,13 @@ data class ListMatcher(
 }
 
 data class ListSizeMismatch(
-    override val actual: Any?,
-    override val expected: Matcher,
-    val actualSize: Int,
-    val expectedSize: Int,
+    override val actual: List<*>,
+    override val expected: ListMatcher,
 ) : Mismatch
 
 data class ListValueMismatch(
-    override val actual: List<Any?>,
-    override val expected: Matcher,
+    override val actual: List<*>,
+    override val expected: ListMatcher,
     val index: Int,
     val mismatch: Mismatch
 ) : Mismatch

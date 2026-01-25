@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.backend.common.extensions.*
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.*
+import org.jetbrains.kotlin.ir.expressions.impl.*
 import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.*
@@ -30,13 +31,11 @@ fun IrClassSymbol.enumEntry(name: String): IrEnumEntrySymbol =
 fun IrGeneratorContext.kProperty1Type(type1: IrSimpleType, type2: IrType): IrType =
     irBuiltIns.kProperty1Class.typeWith(type1, type2)
 
-//fun IrPluginContext.retypeToAny(vararg: IrVararg): IrVararg {
-//    val anyType = irBuiltIns.anyNType
-//    return IrVarargImpl(
-//        startOffset = vararg.startOffset,
-//        endOffset = vararg.endOffset,
-//        type = irBuiltIns.arrayClass.typeWith(anyType), // Array<Any?>
-//        varargElementType = anyType, // Any?
-//        elements = vararg.elements // Keep the already transformed elements (ValueMatchers)
-//    )
-//}
+fun IrPluginContext.retypeToAny(vararg: IrVararg): IrVararg =
+    IrVarargImpl(
+        startOffset = vararg.startOffset,
+        endOffset = vararg.endOffset,
+        type = irBuiltIns.arrayClass.typeWith(irBuiltIns.anyNType), // Array<Any?>
+        varargElementType = irBuiltIns.anyNType, // Any?
+        elements = vararg.elements // Keep the already transformed elements (ValueMatchers)
+    )

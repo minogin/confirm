@@ -6,7 +6,8 @@ import org.jetbrains.kotlin.backend.common.lower.*
 import org.jetbrains.kotlin.backend.jvm.ir.*
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.expressions.*
-import org.jetbrains.kotlin.ir.types.*
+import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.*
 
@@ -27,6 +28,7 @@ class ConfirmIrTransformer(
 
         const val BuiltinMatcherPackage = "com.minogin.confirm.matcher.builtin"
         const val ObjectMatcher = "ObjectMatcher"
+        const val ListMatcher = "ListMatcher"
         const val LogicalMatcher = "LogicalMatcher"
         const val LogicalOperator = "LogicalOperator"
         const val ComparableMatcher = "ComparableMatcher"
@@ -65,8 +67,59 @@ class ConfirmIrTransformer(
             )
         }
 
+        override fun visitExpression(expression: IrExpression): IrExpression {
+            val transformed = super.visitExpression(expression)
+
+            val builder = builder(transformed) ?: return transformed
+
+            if (transformed.type.isSubtypeOfClass(context.irBuiltIns.listClass.owner.symbol)) {
+                val anyNType = context.irBuiltIns.anyNType
+                val newListType = context.irBuiltIns.listClass.typeWith(anyNType)
+
+//                transformed.type = newListType
+
+                when {
+                    transformed is IrCall -> {
+                        transformed.arguments.forEachIndexed { i, arg ->
+                            if (arg is IrVararg) {
+                                transformed.arguments[i] = context.retypeToAny(arg)
+                            }
+                        }
+
+//                        builder
+//                            .irCallWithSubstitutedType(function, listOf(anyNType))
+//                            .apply {
+//                                transformed.arguments.forEachIndexed { i, arg ->
+//                                    function.owner.valueParameters
+//                                    arguments[i] = when {
+//                                        arg.va
+//                                    }
+//                                }
+//                                this.dispatchReceiver = transformed.dispatchReceiver
+//                            }
+                    }
+                }
+
+//                val cast = builder.typeOperator(
+//                    resultType = newListType,
+//                    argument = transformed,
+//                    typeOperator = IrTypeOperator.CAST,
+//                    typeOperand = newListType
+//                )
+
+                val listMatcherConstructor =
+                    context.kClass(BuiltinMatcherPackage, ListMatcher).constructor()
+                return builder.irCall(listMatcherConstructor).apply {
+                    arguments[0] = transformed
+                }
+            }
+
+            return transformed
+        }
+
         override fun visitCall(expression: IrCall): IrExpression {
-            val transformed = super.visitCall(expression) as IrCall
+            val transformed = super.visitCall(expression)
+            if (transformed !is IrCall) return transformed
 
             val builder = builder(transformed) ?: return transformed
 
@@ -109,7 +162,8 @@ class ConfirmIrTransformer(
         }
 
         override fun visitConstructorCall(expression: IrConstructorCall): IrExpression {
-            val transformed = super.visitConstructorCall(expression) as IrConstructorCall
+            val transformed = super.visitConstructorCall(expression)
+            if (transformed !is IrConstructorCall) return transformed
 
             val builder = builder(transformed) ?: return transformed
 

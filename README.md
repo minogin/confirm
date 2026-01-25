@@ -9,8 +9,9 @@ Kotlin Deep Assertion library
 
 # Debug build with in-process Kotlin compiler
 
-./gradlew :play:classes \
--Dorg.gradle.debug=true \
+./gradlew :play:classes -Dorg.gradle.debug=true --rerun-tasks
+
+
 -Pkotlin.compiler.execution.strategy=in-process \
 --no-daemon \
 --rerun-tasks \
@@ -18,7 +19,8 @@ Kotlin Deep Assertion library
 
 # Build
 
-./gradlew :play:classes \
+./gradlew :play:classes --rerun-tasks
+
 -Pkotlin.compiler.execution.strategy=in-process \
 --no-daemon \
 --rerun-tasks \

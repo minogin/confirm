@@ -20,7 +20,7 @@ class ListMatcherTest {
         )
 
         assertEquals(
-            ListSizeMismatch(actual = listOf(1, 2), expected = listMatcher, actualSize = 2, expectedSize = 3),
+            ListSizeMismatch(actual = listOf(1, 2), expected = listMatcher),
             listMatcher.match(listOf(1, 2))
         )
 

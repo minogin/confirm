@@ -10,7 +10,7 @@ enum class ComparisonOperator {
 }
 
 data class ComparableMatcher(
-    val value: Comparable<Any>,
+    val value: Comparable<*>,
     val operator: ComparisonOperator
 ) : Matcher {
     context(resolver: MatcherResolver)
@@ -41,5 +41,5 @@ data class ComparableMatcher(
 
 data class ComparisonMismatch(
     override val actual: Any?,
-    override val expected: Matcher,
+    override val expected: ComparableMatcher,
 ) : Mismatch

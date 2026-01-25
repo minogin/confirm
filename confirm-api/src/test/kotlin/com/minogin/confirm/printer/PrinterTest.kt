@@ -1,4 +1,4 @@
-package com.minogin.confirm.util
+package com.minogin.confirm.printer
 
 import com.minogin.confirm.matcher.*
 import com.minogin.confirm.matcher.builtin.*
@@ -6,6 +6,30 @@ import org.junit.jupiter.api.*
 
 class PrinterTest {
     private val printer = PrinterImpl()
+
+    @Test
+    fun `can print null mismatch`() {
+//        println(
+//            printer.print(
+//                NullMismatch(
+//                    expected = ValueMatcher(5)
+//                )
+//            )
+//        )
+//
+//        println()
+//        println()
+
+        println(
+            printer.print(
+                ValueMismatch(
+                    actual = 3,
+                    expected = ValueMatcher(5),
+                    expectedValue = 5
+                )
+            )
+        )
+    }
 
     @Test
     fun `can print nested list mismatch`() {
@@ -25,24 +49,22 @@ class PrinterTest {
             )
         )
 
-        println(printer.prettyPrint(mismatch))
+        println(printer.print(mismatch))
     }
 
     @Test
     fun `can print nested size mismatch`() {
         val mismatch = ListValueMismatch(
-            actual = listOf(1, listOf(21, 22, 23, 24), 3),
+            actual = listOf(1, listOf(21, listOf(221, 222, 223, 224), 23, 24), 3),
             expected = ListMatcher(1, listOf(21, 22, 23), 3),
             index = 1,
             mismatch = ListSizeMismatch(
-                actual = listOf(21, 22, 23, 24),
+                actual = listOf(21, listOf(221, 222, 223, 224), 23, 24),
                 expected = ListMatcher(21, 22, 23),
-                actualSize = 4,
-                expectedSize = 3
             )
         )
 
-        println(printer.prettyPrint(mismatch))
+        println(printer.print(mismatch))
     }
 
     @Test
@@ -91,6 +113,18 @@ class PrinterTest {
             )
         )
 
-        println(printer.prettyPrint(mismatch))
+        println(printer.print(mismatch))
+    }
+
+    @Test
+    fun `can print comparison mismatch`() {
+        println(
+            printer.print(
+                ComparisonMismatch(
+                    actual = 10,
+                    expected = ComparableMatcher(5, ComparisonOperator.LessThan)
+                )
+            )
+        )
     }
 }
